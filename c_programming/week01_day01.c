@@ -1,7 +1,48 @@
-﻿#include <stdio.h>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
 #include <stdint.h>
 
-#if 1 // Q. 자릿수 구하기 프로그램
+#if 0 // 암호 확인 프로그램
+// V2
+int main(void)
+{
+	int gpw = 0, result = 0, iter = 3;
+	const int pw = 1357;
+	char* msg[] = { "Ask to manager.", "SUCCESS!" };
+
+	while (iter--)
+	{
+		scanf("%d", &gpw);
+		if (gpw == pw)
+		{
+			result = 1;
+			break;
+		}
+	}
+	printf("%s", msg[result]);
+
+	return 0;
+}
+/* V1
+int main(void)
+{
+	int gpw = 0, passKey = 1357;
+	for (int i = 0; i != 3; i++)
+	{
+		printf("Enter password: "); scanf("%d", &gpw);
+		if (gpw == passKey)
+		{
+			printf("\nSUCCESS!\n");
+			return 0;
+		}
+	}
+	printf("\nAsk to manager.\n");
+	return -1;
+}
+*/
+#endif
+
+#if 0 // Q. 자릿수 구하기 및 위치 바꾸기 프로그램
 int digit_count(int num)
 {
 	int count = 1;
@@ -238,8 +279,8 @@ int main(void)
 
 	/* 배열과 포인터
 	int a[3][4];
-	int *b = a; // int (*b)[4] = a; // int *b = &(a[0][0]);
-	printf("&a+1 b+1 = %p %p\n", &(a[1]), b + (1 * sizeof(int)));
+	int (*b)[4] = a; // 배열포인터 (int *b = a; // 안됨)
+	printf("&a+1 b+1 = %p %p\n", &a[1], b + (1 * sizeof(int)));
 	*/
 
 	/* const 사용해도 메모리는 읽고 쓰는게 가능
