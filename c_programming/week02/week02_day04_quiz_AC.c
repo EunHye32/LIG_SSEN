@@ -20,7 +20,7 @@ int check_queen(int row) {
 void nqueen_DFS(int row)
 {
   //for (int i = 0; i < N; i++) printf("%d ", board[i]);  // 검증용
-  printf(" result : %d\n", result);
+  //printf(" result : %d\n", result);  // 검증용
   if (row == N)
   {
     result++;
