@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if 1 // OJ 문제 Q: 등산로 (BFS)
+#if 0 // OJ 문제 Q: 등산로 (BFS)
 #define MAX_N (100 + 2)
 int map[MAX_N][MAX_N];  // 산의 지형
 int cost[MAX_N][MAX_N]; // 각 지점까지의 최소비용(걸린 힘)
@@ -59,20 +59,24 @@ void init_queue(void)
 void mount_BFS(void)
 {
   node curr;
-  int nR, nC;
+  int nR, nC, cR, cC;
   int diff, m_cost;
 
   while (front != rear)
   {
     curr = dequeue();
+    cR = curr.r;
+    cC = curr.c;
 
     for (int i = 0; i < 4; i++)
     {
-      nR = curr.r + dr[i];
-      nC = curr.c + dc[i];
-      if (nR < 1 || nR >N || nC < 1 || nC>N) continue;  // 맵 범위 벗어나면 패스
+      nR = cR + dr[i];
+      nC = cC + dc[i];
 
-      diff = map[nR][nC] - map[curr.r][curr.c];         // 높이 차이 계산
+      //if (nR < 1 || nR > N || nC < 1 || nC > N) continue;  // 맵 범위 벗어나면 패스
+      if (map[nR][nC] == 0) continue;
+
+      diff = map[nR][nC] - map[cR][cC];         // 높이 차이 계산
       if (diff > 0)     // 오르막길
       {
         m_cost = diff * diff;
@@ -82,9 +86,9 @@ void mount_BFS(void)
         m_cost = -diff; // 음수인 diff를 양수로 변환
       }
       // (현재까지의 비용 + 이동 비용)이 (기록된 다음 칸의 비용)보다 작으면 갱신
-      if (cost[curr.r][curr.c] + m_cost < cost[nR][nC])
+      if (cost[cR][cC] + m_cost < cost[nR][nC])
       {
-        cost[nR][nC] = cost[curr.r][curr.c] + m_cost;
+        cost[nR][nC] = cost[cR][cC] + m_cost;
         enqueue((node) { nR, nC });
       }
     }
