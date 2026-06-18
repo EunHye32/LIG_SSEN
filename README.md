@@ -2,4 +2,8 @@
 # C programming + algorism
 - Week01 Done : ~2026-06-09
 - Weel02 Done : 2026-06-09 ~ 2026-06-17
-- project-03 (Homework) : 2026-06-17 ~ 2026-06-21
+- project-03 (deposit_ui.c) : 2026-06-17 ~ 2026-06-21
+
+# Embedded practice (STM32CubeIDE)
+## board : STM32F429I-DISC1
+- Introduction : 2026-06-17 ~ 2026-06-18
