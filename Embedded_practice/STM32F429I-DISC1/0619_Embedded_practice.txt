@@ -1,0 +1,73 @@
+** 수업내용 (2026-06-19) **
+
+[0] d.pr/n/uNO5yo (맥 사용자 터미널 사용 스크립트)
+
+[1] '프로세서 구조 및 디바이스 프로그래밍' 책
+- CPU 설계 기술 두가지
+  * CISC (ex. INTEL 80x)
+  * RISC : 고정 명령 길이로 머신 코드의 길이가 고정되어 있음 (ex. PowerPC, ARM)
+- ARM 프로세서는 전기를 매우 적게 먹음
+  * ARM Cortex 시리즈 v7-A, v7-R, v7-M
+- CORTEX-M : 인터럽트 대기 시간 등을 갖춘 저전력 프로세서
+  * 최신식 Thumb-2 명령어(16 및 32 bit 구성)
+  * SIMD(Single Instruction Multiple Data) 병렬 연산을 지원(체감 속도가 빠름)
+  * (옵션)메모리 보호 장치(MPU) : 권한에 따라 접근을 제한할 수 있음
+- QFP / QFJ / QFN : 반도체 꼬다리 타입
+- HAL_ : 유용하고 편리한 함수
+- 주소는 반드시 16진수로 써야함
+- R로 시작하면 일반목적(임시) 레지스터이고, R이 아니면 특수 레지스터임
+- SP(Stack Pointer) 특수 레지스터가 있어서 스택 메모리가 작동할 수 있음
+- C 코드 ---(컴파일)---> 머신코드 / C 코드 <---(Disassemble)--- 머신코드
+  * bl : 함수 호출할 때 씀 (ex. bl 함수 주소 <함수명>)
+- 레지스터를 사용하지 않고는 코드가 성립할 수가 없음
+- 스택 메모리의 목적 : 1) 전달인자 2) 지역변수 3) 컨텍스트 4) 리턴주소 5) 프레임 포인터
+  * 함수 호출의 전과 후의 레지스터의 값이 동일해야 함 -> 백업되는 걸 "컨텍스트(context)"라고 하고 스택에 저장됨
+  * ARM 프로세서는 주소를 하나 감소시키고 스택에 저장함 -> "선감소 후저장"
+  * 주소를 충분히 감소시키고 순차적으로 저장함
+  * word(32bit) 단위로만 액세스 함
+- SP : MSP(Main stack pointer, 특권 스레드에서 실행되고 있으면 여기로 alias) / PSP(Processor stack pointer)
+- (암기)Flash 메모리는 0x08, RAM은 0x20, CCMRAM(매우 빠름, CPU와 더 가까움)은 0x10
+- Barrel Shifter : 비트를 밀어주는 역할을 하는데 이게 있어서 Overhead가 없이 동일한 클럭을 유지할 수 있음
+  * ALU에 들어가기 전에 거침
+  * 곱하기 나누기 연산은 Mul/Div 에서 수행
+- 하버드 아키텍쳐는 명령어와 데이터 버스가 따로 있어 읽고 쓰는게 동시에 가능
+- THUMB 명령어는 16비트 머신코드 / THUMB2 명령어는 16,32 비트 머신코드 따라서 가변길이 명령어
+- ARM 명령어는 32비트 머신코드
+- legacy 프로세서는 THUMB2가 없었음(ARM7, ARM9, ARM11)
+- 16bit와 32bit 머신코드 사이를 왔다갔다하면 오버헤드 발생 -> 이걸 없애기 위해 THUMB2가 나옴
+- 파이프라인 효과 : 명령어들을 실행하는데 FETCH-DECODE-EXECUTE 의 순환을 통해 적은 클럭으로도 끝낼 수 있음
+- 특정 명령어를 실행할 때 PC = 현재 명령어(어드레스) + 4바이트
+- DMA는 데이터 이동할 때 쓰고, 이걸 사용함으로써 CPU가 다른 명령을 수행할 수 있게 해줌
+- LR(Link Register) : 함수 호출의 리턴 주소를 저장. LR 레지스터는 하나밖에 없는데 
+- PC(Program counter) : 기능이 완료된 후 LR에서 값을 로드
+- pop{r7, pc} == bx lr @ 리턴명령 PC=LR
+- 함수의 인자가 많아질수록 레지스터로 사용되다가 스택 사용하여 넘기게 됨
+- AAPCS(Procedure Call Standard for ARM Architecture)
+  * R0, R1, R2, R3 : 인수전달
+  * R0 : 리턴값
+  * APSR(Application program status register) - NZCVQ
+- 어셈블리어에서 상수 표시할 때는 '#' 써줘야 함
+- 아래 두줄은 r1의 값을 읽어 r0에 저장하고, 스토어 사용해 r0에 저장된 값을 r2에 저장
+  * ldr r0,[r1]  @read   // (로드) 메모리 읽기 명령어
+  * str r0,[r2]  @write  // (스토어) 메모리 쓰기 명령어
+  * C언어에서의 '*'은 어셈블리어에서 '[]'   // 어셈블리어에서 이름으로 접근 불가능하고, 참조연산만 가능
+  * ldr r0, =0x78f30000 -> ldr r0,[pc,#offset]  @ offset= 현재 명령어의 위치 - abc의 주소 -->RISC 프로세서 방식
+- Carry : 왼쪽으로 밀었을때 밖으로 돌출되는 비트 / Borrow : 오른쪽으로 밀었을때 밖으로 돌출되는 비트
+
+[2] 실습 : led (blink) + printf(using assembly code)
+- 보드 : STM32F429I-DISC1
+- F3 : 함수 정의로 들어감
+// 1) 레지스터 사용해 인수 더해 값 출력
+//	/*
+//		int mysub(int, int)
+//				  R0,   R1
+//		-------------------
+//		*/
+//	.global mysub
+//mysub:
+//	add r0,r1	@ r0=r0+r1
+//	//mov r0, #3	@ 리턴값은 R0을 이용해서.
+//	bx lr
+
+// 2) break point 역할을 해줌 (인라인 함수)
+//__BKPT(0);

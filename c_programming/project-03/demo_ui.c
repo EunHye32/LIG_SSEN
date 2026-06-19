@@ -66,7 +66,7 @@ int displayMenu(void)
 {
 	int select = 0;
 	int i;
-	char subMenu[][20] = { "서브메뉴1", "서브메뉴2", "서브메뉴3", "종료하기" };
+	char subMenu[][20] = { "1. 은행 현재 고시 이자율 확인", "서브메뉴2", "서브메뉴3", "종료하기" };
 
 	system("cls");
 	for(i=0; i < 4; i++){
@@ -85,7 +85,7 @@ int displayMenu(void)
 void menu1(void)
 {
 	system("cls");
-	prompt(30, 7); printf("서브 메뉴1");
+	prompt(30, 7); printf("1. 은행 현재 고시 이자율 확인");
 	prompt(20, 20); printf("# 아무키나 입력하면 메인 메뉴로 돌아갑니다");
 	getch();
 }

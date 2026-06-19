@@ -7,3 +7,4 @@
 # Embedded practice (STM32CubeIDE)
 ## board : STM32F429I-DISC1
 - Introduction : 2026-06-17 ~ 2026-06-18
+- 2026-06-19 ~ 
