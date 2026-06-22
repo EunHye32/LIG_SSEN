@@ -1,0 +1,119 @@
+** 수업내용 (2026-06-22) **
+
+[1] '프로세서 구조 및 디바이스 프로그래밍' 책
+- xPSR(N, Z, C, V, Q) : 연산 결과 저장. 상태 정보 저장 bit
+- Cortex-m은 부팅시 디폴트 privilege thread mode
+- 부동소수점에서 사용하는 d~, s~ 비트는 사용하지 않음
+- 'mov' 명령어로 복사 안되는 것은 'ldr' 명령어 사용
+- 어셈블리어는 Reset_Handler: 부터 시작함
+  * SP가 RAM Main stack의 맨 끝 주소를 가리키게 함 // MSP 초기화
+  * PSP는 User thread 사용할 때 사용 (control bit 0x3)
+- GPIO(General Purpose Input/Output) : 바이너리(High/Low)를 입출력할 수 있는 레지스터
+  * 칩 안에 들어있으며, 외부와 연결해 사용
+  * 보드 기준에서 I/O
+  * AH(High speed)B(Bus) system Bus + APB 사용
+  * I/O 전압이 3.3V이기 때문에 더 높은 전압을 줄 수 없음
+  * GPIO_TypeDef : GPIO HW 레지스터
+  ** 0) HAL_GPIO_WritePin(GPIOG, LD3_Pin|LD4_Pin, GPIO_PIN_SET); // LED 'ON'
+  ** 1) 데이터북에서 2.2 Memory organization 챕터에서 GPIOG의 베이스 주소(0x40021800) 확인
+  ** 2) GPIOx->"BSRR"(8.4.7 GPIO port bit set/reset register) 검색해 GPIO의 오프셋 주소(0x18) 확인
+  ** 3) 툴에서 해당 GPIO 주소 확인
+  ** 4) 해당 8.4.7 내용 디테일하게 확인
+  ** 5) ODRx 비트가 세팅된다는 내용보고, ODRx에 대한 내용 확인
+  ** 6) 다이어그램(Figure 25) 보고 매칭. 몇 번 비트가 Set되는 지 확인(코드상으로도 확인)
+- 회로도에서 다이오드 그림에 밖으로 나가는 추가 화살표 있으면 LED 의미
+- 각 핀은 외부 세계와 MCU를 잇는 인터페이스
+- SDIO : SD카드를 제어하는 장치. 빨라야하기 때문에 AHB system Bus 사용
+- Open collector 방식의 외부 장치를 연결하기 위해선 "풀업저항"이 필요(Open drain 방식)
+  * 항상 0V나 3.3V가 나올 수 있도록 해줌
+- 대부분 Push나 Pull 방식인데 가끔 Open drain 방식을 사용
+- 완전히 High 전압을 사용하고 싶으면 풀업 저항을 쓰고, 완전히 0V의 전압을 세팅하고 싶으면 풀다운 저항 사용
+- IDR(입력 데이터 레지스터) : I/O 핀으로 들어오는(APB2) 신호를 매 클럭 마다 샘플링하여 기록
+- Alternate : 제3의, 대체
+- MUX(Multiplexed I/O Pin) : 다중화 핀. 소형화를 위해 핀 하나에 여러 기능을 추가함
+- 레지스터에 값을 저장하기 때문에 인터럽트 발생하면 어셈블리 수준에서 콘텍스트 저장을 해줘야함
+- HW 주소를 알면 적절하게 포인터 변수를 사용해 연결할 수 있음
+- 메모리 맵핑 I/O(Memory mapped I/O) : 주변장치를 위해 일정한 메모리 주소 공간을 할당하는 방식
+- HW 레지스터에는 volatile 사용해주지 않으면 컴파일러가 최적화 해버려 무조건 사용. 소스코드에서 미리 지정해둠
+  * 32비트면 int나 long 타입. 16비트면 short
+- BSRR과 ODR을 비교 : BSRR은 인터럽트가 끼어들 수 있지만, ODR은 인터럽트가 끼어들 수 없음
+  * *rGPIOG_ODR |= (1<<13);    ==    *rGPIOG_BSRR = (1<<13);
+  * *rGPIOG_ODR &= ~(1<<13);    ==    *rGPIOG_BSRR = (1<<(13+16));
+- CMSIS(Cortex Microcontorller SW Interface Standard) : ARM에서 제공하는 SW 인터페이스 표준
+- HAL(HW Abstraction Layer) 인터페이스 : STMicroelectronics에서 개발한 STM32 시리즈 라이브러리
+  * 가장 큰 장점은 STM32 시리즈간의 이식성
+- LL(Low Layer) : 저수준 드라이버로 HAL만큰의 이식성은 없지만, 더 좋은 성능과 코드 최적화에 초점을 맞춤
+  * LL 드라이버 사용시 .ioc 파일에서 Project Manager에서 Advanced Setting의 GPIO를 LL로 세팅해줘야함(Default: HAL)
+- 외부메모리(메모리 컨트롤러, ex. FMC external MemCtl)에서도 코드/데이터를 읽어낼 수 있음
+- CCMRAM(0x100...)번지이고 속도가 굉장히 빠름
+
+[2] 실습 : Check register value(using assembly code), GPIO(LED+button, Key scan)
+- 예제 : 00_CORTEX_02_ASSEMBLY_f429, 00_CORTEX_01_THREAD_f429,
+ 01_GPIO_01_INTERNAL_LED_FLASH_f429, 01_GPIO_07_INTERNAL_LED_FLASH_BITBANDING_f429, 01_GPIO_05_MATRIX_KEY_f429
+- 보드 : STM32F429I-DISC1
+- F3 : 함수 정의로 들어감
+- F5 : Step Into (Debug mode)
+- F6 : Step Over (Debug mode)
+
+1) xPSR(N, Z, C, V, Q) flag
+//	mov r0,#0x80000000
+//	subs r0,#1 @ 0x7FFFFFFF (큰 양수로 됨-Overflow)
+//	qadd r0,r0,r1 @ Q(1):0x7FFFFFFF (Overflow 되지 않도록 현재 포화상태 유지하는 뺄셈)
+
+2) User thread mode로 바꾸기(control bit = 0x3)
+// enterThreadMode:
+//	mov r0, #3	/* use thread mode & psp stack memory */
+//	msr		control, r0    	 @control=r0 (Move Special Rigister)
+//	ldr   sp, =_estack     /* set process stack pointer */
+//	sub   sp, sp, #4096 	 /* psp begin address */
+//	bx lr
+
+3) 어셈블리어로 loop문 만들기
+//	 /*
+//	 	int sum(int start, int end)
+//	 	------------------------
+//			r0=start, r1=end
+//			The return value is sum (r0)
+//		*/
+//	.global  sum  @ global 없으면 함수 접근이 안됨
+//sum:  @ lable(레이블, ':' 필요)
+//	@ IMPLEMENT HERE
+//	@ use MOV, ADD, CMP and B instruction: under 10 lines
+//	mov r2,#0 @sum(r2) -> R2 초기화
+//loop1:
+//	add r2,r0   @ r2 = r2 + r0
+//	add r0,#1   @ inc
+//	cmp r1,r0   @ cmp(compare, 첫번째 요소가 기준) -> 조건문
+//	bge loop1   @ b(branch)g(greate or)e(equal) -> 조건 기준 + 무한루프
+//	mov r0,r2 @ return value -> 리턴값
+//	bx lr	 @ return
+
+4) HAL_GPIO_WritePin 이해
+//void HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState)
+//{
+//  /* Check the parameters */
+//  assert_param(IS_GPIO_PIN(GPIO_Pin));
+//  assert_param(IS_GPIO_PIN_ACTION(PinState));
+//
+//  if(PinState != GPIO_PIN_RESET)
+//  {
+//    GPIOx->BSRR = GPIO_Pin;
+//  }
+//  else
+//  {
+//    GPIOx->BSRR = (uint32_t)GPIO_Pin << 16U;
+//  }
+//}
+
+5) 비트 밴딩 이용해 LED 키고 끄기
+//	/* (3)비트밴딩을 이용한 방법 */ == *rGPIOG_ODR ^= (1<<13);
+//	if(1)
+//	{
+//		volatile unsigned long *rGPIOG_ODR= (volatile unsigned long*)0x40021814;
+//		if(*rGPIOG_ODR & (1<<13)){
+//			*rGPIOG_ODR &= ~(1<<13); //*GPIOG_PIN13 = 0; // OFF	*rGPIOG_ODR &= ~(1<<13)
+//		}
+//		else {
+//			*rGPIOG_ODR |= (1<<13); //*GPIOG_PIN13 = 1; // ON 	*rGPIOG_ODR |= (1<<13)
+//		}
+//	}
