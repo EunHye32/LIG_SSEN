@@ -1,0 +1,110 @@
+** 수업내용 (2026-06-23) **
+
+[1] '프로세서 구조 및 디바이스 프로그래밍' 책
+- S(System)-bus : 주변 장치나 SRAM에 있는 데이터에 액세스하는 데 사용
+  * SRAM은 0번지로 접근할 수도 있고, 코드나 데이터 접근하기 위해서는 0x20 번지로 접근할 수도 있음
+- SRAM은 읽기 및 쓰기 작업은 대기 상태가 0인 CPU 속도로 수행되어 매우 빠름
+- 플래시 메모리는 전원이 꺼졌다 켜지면 일부 지워질 수 있어서 위험해 CPU가 코드를 잘 못 읽을 수 있어, BOR 레벨이라는 안전 장치가 있음
+  * BOR 레벨 : 일정 전원이 올라올때까지 대기
+  * 플래시 메모리는 0번지로도 접근할 수 있고, 0x80번지로도 접근할 수 있음 -> 0번지로 접근하면 0x80번지로 접근하게 설계되어 있음
+  * Don't care : 부트 모드는 핀 1과는 상관없이 0번 모드로 부팅 가능한 상태
+- Warm boot : 전원이 켜진 상태에서 reset 버튼 누름
+- Cold boot(start) : 전원이 완전히 꺼진 상태에서 전원을 켜 시스템 시작함
+- 리틀 엔디언은 자연스럽지 않음(31-24, 23-16, 5-8, 7-0). 대부분은 리틀 엔디언 방식을 사용함
+- AHB(고속도로, 속도가 중요하면 이 버스에 연결) / APB(지방도로, 버스 클럭이 빨라도 소용없기 때문에 보다 느린 버스 사용해도 무관하여 사용)
+- LDR/STR : 메모리 액세스하는 명령어이기 때문에 자주 쓰임
+- CPUID 레지스터에는 프로세서 부품 번호, 버전 및 구현 정보가 포함되어 있음(Read-only)
+- 비트 밴딩 : Read->Modify->Write 단계를 쓰기만으로도 수정이 가능해져 시간적으로 단축시킬 수 있음
+  * 32 bit band alias <-> 1MB Bit band region
+  * 메모리 맵에는 2개의 1MB 비트 대역 영역에 매핑되는 두 개의 32MB 앨리아스 영역이 있음
+  * 비트 밴드 영역은 비트 밴드 별칭 영역의 각 워드를 비트 밴드 영역의 단일 비트에 매핑함
+  * 하나의 비트가 매핑되는 앨리아스 영역에서 확장됨
+  * 토글은 구현할 수 없음 (꼭 필요하면 ODR로 해야함)
+- BSRR (Bit Set/Reset Register) / ODR (Output Data Rate, 출력 데이터 속도)
+- RCC(Reset Clock Control) : 리셋과 클럭을 제어하는 장치
+- CPU는 클럭이 들어가야만 동작하기 때문에 클럭 신호가 중요함
+  * 두 부품이 있음(EXTAL(External clock), XTAL(Crystal resonators))
+- PLL(위상 고정 루프)를 사용해 클럭을 뻥튀기 해줌. 저주파 외부 신호를 고주파 클럭으로 만들어줌
+  * 위상이 계속 틀어지는 걸 고정시켜줌
+- HSE(High Speed External clock)
+  * 내부의 HSI보다 HSE의 외부 클럭이 정확도가 더 높음
+- PLL을 거치지 않은 HSE/HSI 클럭보다 거치는 게 더 다양한 주파수를 만들 수 있음
+- CPU는 두 개의 클럭을 받음(HCLK, FCLK)
+- SYSCLK(System clock)은 최대 180MHz까지임. 이 클럭을 나눠서 AHB/APB를 통해 각 장치에 들어감
+- USB는 반드시 48MHz clock이어야 함
+- Prescaler : 나눗셈을 해줌
+- Drystone 벤치마킹은 CPU 성능을 측정하는 도구이고, 숫자가 클수록 성능이 좋은 것
+- CPU 뿐만이 아니라 장치에도 클럭이 들어가지 않으면 작동하지 않음
+- reset : PORESETn(Power on reset)  /  SYSRESETn  /  nTRST(SWJ-DP, JTAG과 유사한 것. 디버거 리셋)
+- NVIC : 메인 인터럽트 장치. EXTI 포함한 내/외부 모든 인터럽트 신호를 처리함
+- EXTI : 보조 인터럽트 장치. 외부에서 들어오는 인터럽트 신호를 처리함. 외부 핀으로 들어오는 신호를 NVIC의 도움을 받아 처리
+  * 외부핀 -> EXTI -> NVIC -> CPU
+- 인터럽트 : 현재 처리중인 작업(SW 실행)을 중단하고 즉시 또 다른, 더 중요한 작업에 CPU를 전환하는 방법을 제공
+  * 인터럽트가 발생하면 인터럽트 신호가 생성되어 CPU가 현재 작업을 중지하고 현재 상태를 저장하며 인터럽트와 관련된 ISR 또는 인터럽트 핸들러라고 하는 처리 프로그램을 시작함
+  * 비동기 특성
+  * 인터럽트 처리가 완료되면 CPU는 이전 상태를 복원하고 중단된 지점에서 다시 시작함
+  * MCU 내부(On-chip) 또는 외부(Off-chip) 주변 장치에 의해 트리거 될 수 있음
+  * CPU가 비생산적인 폴링 작업을 하지 않아도 되므로 생산적임. 신호가 CPU가 주기적으로 체크하지 않아도 알게됨
+  * Interrpt controller가 interrpt ignore(masking)하면 CPU는 인터럽트 발생한 걸 모름
+  * 인터럽트 상태 레지스터  /  인터럽트 마스크 레지스터  /  인터럽트 펜딩 레지스터
+  ** 인터럽트 Enable 되어있으면 펜딩에 써놨던걸 Active에 쓰고 펜딩에 있는 값 지움
+  ** 인터럽트 상태 클리어(__HAL_GPIO_EXTI_CLEAR_IT)를 안해주면 무한반복함
+  *** EXTI PR에 써진 값이 자동으로 clear 되지 않아 명령으로 pending bit를 clear 해줘야 함
+  *** 보통의 레지스터는 0을 써야 지워지는데, EXTI_PR 레지스터는 1을 넣어줘야 상태가 지워짐(like XOR)
+  * 레벨 트리거 인터럽트는 신호가 지속되는 동안 인터럽트가 유지되지만, 펄스 트리거 인터럽트는 신호의 에지 변화 시점에만(한번만) 인터럽트가 발생함
+  ** NVIC_ISER(set) / NVIC_ICER(clear) : 인터럽트 마스킹 레지스터
+  *** ISER을 1로 set 해놔야 인터럽트 사용 가능함(Interrpt Enable) --> disable 할 때는 ICER을 1로 해놔야 함
+  ** NVIC_ISPR / NVIC_ICPR : 인터럽트 펜드 레지스터
+  * stacking : 진행 중인 콘텍스트를 레지스터에 저장하는 행위  /  unstacking
+  * 인터럽트 걸리면 현재 중요한 레지스터를 저장함(R0, R1, R2, R3, R12, LR, PC, xPSR) --> 콘텍스트
+  ** -> R0~R3 까지만 저장하는 이유는 함수 호출하기 전과 후가 레지스터 값은 동일해야한다는 조항이 있는데, 예외적으로 이 4개의 레지스터만 제외됨.
+  ** R0~R3를 특별 관리하는 이유는 "이 레지스터들이 함수/인터럽트 호출 시 매개변수 전달과 결과 반환, 그리고 임시 계산에 가장 빈번하게 사용되어 덮어쓰여질 가능성이 가장 높기 때문"
+- IRQ(Interrpt ReQuest, 인터럽트 요구 신호) 외에도 NMI 인터럽트는 마스킹이 안되는 인터럽트 감지 신호로 클럭 이상과 같이 심각한 경우에 발생
+  * IRQ 넘버는 인터럽트 번호이고 16을 더하면 Exception(System+HW 인터럽트, 1번부터 시작) 번호가 나옴
+  * Exception number 1 : Reset (우선순위가 가장 높음)
+  * IRQ number 0의 시작 주소는 0x0040
+- 폴링(polling) : 루프 돌며 실행하는 방식. 시간이 지정된 이벤트 또는 상태 변경을 모니터링하는 방법
+  * 단점 : 과도한 대기 시간, HAL_Delay(1000)로 텀을 주어도 신호를 놓칠 가능성이 있음, 소비 전력 증가
+
+[2] 실습 : Check CPUID register value, clock, Drystone, reset, Interrupt
+- 예제 : 00_CORTEX_11_CPUID_f429, 01_GPIO_07_INTERNAL_LED_FLASH_BITBANDING_f429, 03_RCC_01_USE_HSE_f429,
+ 03_RCC_02_DHRYSTONE_f429, 03_RCC_03_SOFTWARE_RESET_f429, 02_INTERRUPT_01_INTERNAL_BUTTON_KEY_f429, 
+- 보드 : STM32F429I-DISC1
+- F3 : 함수 정의로 들어감
+- F5 : Step Into (Debug mode)
+- F6 : Step Over (Debug mode)
+- Ctrl+/ : 주석처리
+
+1) SW reset(AIRCR)
+//void SoftwareReset(void)
+//{
+//  SCB->AIRCR = (0x05FA<<16)|(1<<2);
+//  for(;;) {
+//    /* wait until reset */
+//  }
+//}
+
+2) Interrupt
+//void EXTI0_IRQHandler(void)
+//{
+//	/* USER CODE BEGIN EXTI0_IRQn 0 */
+//	HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+//	printf("\nButton pushed!!! by hardware trigger\n");
+//
+//	printf("NVIC->IABR[%d]=0x%08x\n", 6, (unsigned)NVIC->IABR[0]);
+//	printf("NVIC->ISER[%d]=0x%08x\n", 6, (unsigned)NVIC->ISER[0]);
+//
+//	/* USER CODE END EXTI0_IRQn 0 */
+//	HAL_GPIO_EXTI_IRQHandler(B1_Pin);
+//	/* USER CODE BEGIN EXTI0_IRQn 1 */
+//
+//	/* USER CODE END EXTI0_IRQn 1 */
+//}
+
+2_1) Rising+falling 하면 버튼 누를때+뗄때 두번 인터럽트 발생
+//  /*Configure GPIO pin : B1_Pin */
+// GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING; // | GPIO_MODE_IT_RISING;
+
+2_2) 우선 순위(선점+서브)
+//  /* EXTI interrupt init*/
+//  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
