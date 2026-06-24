@@ -1,0 +1,74 @@
+** 수업내용 (2026-06-24) **
+
+[1] '프로세서 구조 및 디바이스 프로그래밍' 책
+- 인터럽트 우선순위 : 여러 인터럽트가 팬딩하고 있었을 때, 우선순위로 그 처리 순서가 결정됨. 어떤 MCU는 이미 진행중인 인터럽트를 선점할 수 있음.
+  * 인터럽트 마스크 레지스터는 인터럽트를 사용할 수 있게하거나 무시할 수 있게 함
+  * 인터럽트 상태 레지스터는 처리되는 인터럽트 상태를 표시
+  * 인터럽트 펜딩 레지스터는 실행 예정인 인터럽트를 표시
+- NVIC(Nested Vectored Interrupt Controller) - 신호를 탐지해 펄스 인터럽트를 처리할 수 있게 함
+  * NVIC_IABR : 인터럽트 상태 레지스터
+  * NVIC 제어 함수들이 이미 만들어져 있음
+- 예외처리 핸들러 진입
+  * 1) 어셈블리 단계에서 이미 처리중인 명령어는 실행 끝내고 인터럽트 들어감 (오래 걸리는 예외적인 명령어들은 실행후 할지 중단하고 할지 선택가능)
+  * 2) 컨텍스트를 자동 저장하는데 현재 스택을(MSP 또는 PSP)에 푸시 (xPSR, 리턴 주소, LR, R12, R3, R2, R1, R0)
+  * 3) 핸들러/특권 모드로 전환(MSP, Main Stack Pointer 사용)
+  * 4) 예외 핸들러 주소로 PC 로드
+  * 5) EXC_RETURN(ex. FFFFFFF9) 코드로 LR 로드
+  * 6) 예외 번호로 IPSR 로드
+  * 7) 예외 핸들러 코드 실행 시작
+  * 예외 요청에서 첫 인터럽트 실행 시작까지 12사이클 소요됨
+  * 복원도 자동 복원됨 (리턴 명령어로 POP, LDR, BR이 사용될 수 있음)
+- 리맵(REMAP) : BOOT 0, BOOT 1 핀의 차이는 어떤 부팅 메모리로 부팅할지에 대한 부팅 방법을 결정함 (ex. RAM이 0x20번지인데 이를 0번지로 바꿀 수 있음)
+- 벡터 테이블은 0번지일때만 읽는데, Flash에 있으면 실행값을 마음대로 바꿀 수 없어 VTOR(0xE00) 레지스터 사용해 SRAM이나 외부메모리로 옮길 수 있음
+  * VTOR(Vector table offset register)를 통해 벡터 테이블의 위치를 알 수 있음
+- 스택 메모리를 스택 포인터가 가리키게 하면 그게 스택 초기화임
+  * 초기 스택 포인터와 리셋 핸들러의 주소는 각각 0x0과 0x4에 위치해야 함
+  * 프로그램 시작은 Reset_Handler: 임
+- Exception 유형 : RESET(from cold/warm boot, NMI(리셋 이외의 가장 높은 우선순위 예외), Hard Fault(익셉션 처리 중 오류 발생으로 인해 발생)
+              , Usage Fault(여러 오류 등에 의해 발생, SVCall/PendSV(OS환경에서 발생-RTOS), SysTick예외(시스템 타이머가 0에 도달하면 발생-RTOS)
+- 인터럽트 또는 IRQ(Interrupt)는 주변 장치에서 신호를 보내거나 SW 요청에 의해 생성된 Exception
+- FAULTMASK 레지스터 : NMI 제외한 모든 예외 방지 / PRIMASK 레지스터 : NMI&FAULT 제외한 모든 예외 방지 / BASEPRI : 특정 우선순위 또는 그 이하의 우선순위를 가지는 예외 방지
+  * 우선순위가 같거나 우선순위 번호가 크면 인터럽트가 안걸림
+- 비정렬 액세스(unaligned access) : 접근하려는 메모리의 접근 단위의 정수배가 아닌 주소
+- 전통적인 ARM은 정렬된 액세스만 허용(비정렬 액세스는 금지되었음) ex. ARM7,9,11, CORTEX-A --> 비정렬된 주소에 접근하면 CPU가 멈춤
+  * 이유 : 정렬이 안되있으면 두번 액세스해야하는 상황을 막기 위해서 비정렬 액세스를 금지해놨었음 (for 성능)
+  * CORTEX-M은 비정렬 액세스가 디폴트임. 하지만 성능을 위해서는 안쓰는게 좋음 (실무에서는 신경 안씀)
+- CFSR(Configurable fault status register)은 여러 에러 상태를 나타내는 레지스터
+- SCB(시스템 제어 블록, System Control Block) : 시스템 내부 정보 확인 및 시스템 제어를 제공되며 예외도 포함됨
+- 테일 체이닝(Tail-chaining) : 인셉션 처리 중에 인터럽트가 또 발생하면 unstacking(스택팝) 건너뛰고 바로 다음 인터럽트 처리함
+- 인터럽트 핸들러를 어떻게 만드는 지에 따라 몇 개의 중첩밖에 안되어도 오버플로우 생길 가능성이 있음 (ex. 지역변수의 사용)
+- UART(비동기 방식의 통신 장치)  /  USART(동기+비동기=전이중 방식의 통신 장치)
+  * (1) 보드 전원 공급  /  (2) 디버깅(SWJ)  /  (3) 가상 콘솔
+- UART는 MCU안에 들어가 있으며 RS-232 Transceiver와 연결되어 있고, RS-232 통신 프로토콜을 따름
+  * RS-232 표준 : 보드 밖으로 나갈 때는 12V(논리적으로 1)로 내보내고 받음. 내부에서는 +3.3V --> RS-232 칩이 상호 변환해주기에 필요함
+  * UART는 TTL 전압 레벨(0~5V)에서 작동함. 이 문제를 해결하기 위해서 RS-232 칩이 필요
+  * 비동기라 송수신 클럭 연결할 필요가 없음
+- 비동기 문자를 사용하는 가장 널리 사용되는 프로토콜은 RS-232이지만, 긴 케이블 사용시에는 RS-485 프로토콜 사용
+- 시리얼은 한 줄로 바이너리 데이터를 보내고, 유휴 상태는 1의 연속 스트림이 전송됨
+- USART 송수신 포맷 중 Start Bit를 포함해 양측 동기화를 함 (기본형식 : Start Bit--Parity Bit-Stop Bit) --> 상호간의 협의가 되어 있어야함
+  * 응용 프로그램에서 장치관리자의 포트 설정을 참조하지 않으므로 Putty 설정에서 각각 설정해줘야 함
+  * 흐름제어를 하기 위해선 CTS/RTS 선 연결이 필요하기 때문에 지원하지 않는다면 굳이 설정할 필요가 없음
+  * 패리티 비트는 데이터 깨지지 않고 잘 갔는지 판별하기 위해 있지만, 잘 사용하지 않음 (Set to 0(None))
+  ** 패리티 비트를 짝수로 설정한다고 해도, 2개처럼 짝수로 깨져버리면 믿을 수 없는 값이 되어서 잘 사용하지 않음
+  ** 패리티로 처리하지 않고, 응용 프로그램 수준에서 CRC로 처리함 - 시리얼 통신은 과거의 유물이기 때문에 조금 깨져도 그러려니 해야함
+- 이름에 SR이 들어가 있으면 상태 레지스터이고, CR이 들어가 있으면 Control 레지스터일 가능성이 높음
+- USART_BRR(Baud Rate Generator Logic, 보레이트 생성기)
+
+[2] 실습 : Fault, Interrupt, UART
+- 예제 : 00_CORTEX_07_UNALIGN_f429, 00_CORTEX_08_HARDFAULT_HANDLER_f429, 00_CORTEX_10_NESTED_INTERRUPT_f429, 05_UART_03_PRINTF_f429
+- F3 : 함수 정의로 들어감
+- F5 : Step Into (Debug mode)
+- F6 : Step Over (Debug mode)
+- Ctrl+/ : 주석처리
+
+1) 비정렬 액세스 시도로 인한 Fault
+//    SCB->SHCSR = SCB->SHCSR | (7<<16); // If you do not do this, it will be treated as a hard fault.
+//    SCB->CCR = SCB->CCR | (1<<3);   @ Goto HardFault_Handler
+//
+//void HardFault_Handler(void)  @ Defualt
+//- void MemManage_Handler(void)
+//- void BusFault_Handler(void)
+//- void UsageFault_Handler(void)
+
+2) UART와 Putty 통신 속도를 맞춰줘야 글씨 안깨짐
+//  huart1.Init.BaudRate = 115200;
