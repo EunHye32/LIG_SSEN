@@ -1,0 +1,97 @@
+** 수업내용 (2026-06-25) **
+
+[1] '프로세서 구조 및 디바이스 프로그래밍' 책
+- 윈도우즈
+  * '\r' : Carriage return (0x0D)
+  * '\n' : New line character(line feed) (0x0A 0x0D)
+- 리눅스
+  * '\n' : New line character(line feed) (0x0A)
+- USART DR(Data register) : TDR(Transmit data register)과 RDR(Receive data register)를 총괄
+  * CPU가 훨씬 빠르기 때문에 TDR에서 Transmit Shift register를 통해 완전히 빠져나갈 때까지(버퍼 비어질 때까지) 기다리고 또 보냄
+- HAL_..._IT : 어떤 장치와 인터럽트가 연동되어 있다는 뜻
+- 임베디드 시스템의 타이머 활용
+  * 1) 시간지연(delay)  ex. mdelay(100); // CPU 이용해서 시간지연을 구현, hwdelay(100); // TIMER 이용해서 시간지연을 구현
+  * 2) 시간측정(measure)  ex. hwtimer_start(TMR1); ... time=hwtimer_stop(TMR1);
+  * 3) PWM 타이머의 응용  ex. LED 점멸(백라이트 조명 밝기 조정), 모터 구동
+- 클럭의 속도를 떨어뜨리기 위해 Prescaler(2^9)로 1차 감속시키고, /4 해주면서 2차 감속시킴 -> 타이머는 이 감속된 클럭을 사용
+  * 감속 계산 과정에 따라 나올 수 없는 클럭도 있음
+  * PTR에 1000(Hz, 1초)을 써 놓으면 클럭을 세어 0까지 되는 식으로 타이머를 구현
+  * 원하는 시간을 만들어 내기 위해서 들어오는 클럭과, Prescaler&divider와 PTR을 통해 원하는 타이머를 만들 수 있음
+- PSC(prescaler)에 들어오는 클럭이 CK_PSC이고, PSC를 통과하면 CK_CNT로 나가 CNT(Counter value)로 들어감
+  * 가장 기본적인 클럭은 CK_INT
+- ARPE가 0이면 ARR이 바뀌면 즉시 반영되고, 1이면 진행중인 주기에는 반영되지 않다가 주기가 끝나면 반영됨
+- PWM(Pulse Width Modulation, 펄스 폭 변조)
+  * 주파수는 일정하게 유지하면서 신호의 폭을 조절해 원하는 크기의 아날로그 신호를 만들어내는 기술
+  * PWM 모드는 주파수가 고정되어 있고 듀티 사이클이 가변적인 파형을 생성하는 데 사용
+  * 프로그래밍 가능한 기간(Period)으로 단일 펄스(one shot pulse)를 생성할 수 있음 -> OC(Output compare)
+  * PWM에서 중요한건 CNT 와 CCR(Compare register)
+  * 주기는 ARR이 결정하고, High 길이는 CCR이 결정함
+- OC(Output compare, 출력 비교) mode : 주로 입력 신호와 출력 신호를 비교하거나, 일정한 주기로 이벤트를 생성할 때 사용
+- CCE는 Output pin에 신호를 내보낼 지 결정하고, CCP는 비트를 반전시켜 Output 신호가 뒤집혀 나오게 함
+
+[2] 실습 : UART, timer, PWM
+- 예제 : 05_UART_03_PRINTF_f429, 05_UART_04_INTERRUPT_f429, 07_TIMER_01_DELAY_f429, 08_PWM_04_SERVO_MOTOR_f429, 08_PWM_05_INPUT_CAPTURE_f429
+- F3 : 함수 정의로 들어감
+- F5 : Step Into (Debug mode)
+- F6 : Step Over (Debug mode)
+- Ctrl+/ : 주석처리
+
+1) 인터럽트로 문자 받기
+//#ifdef NON_BLOCKING
+//		if(RxReady==TRUE){
+//			RxReady=FALSE;
+//			HAL_UART_Transmit(&huart1, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+//			HAL_UART_Receive_IT(&huart1, &ch, 1);	// 다음에 또 받기 위함
+//		}
+
+2) 리타겟(Retargeting). __io_putchar 대신 __lcd_putchar, __log_putchar 로 수정해 활용 가능
+//__attribute__((weak)) int _write(int file, char *ptr, int len)
+//{
+//	int DataIdx;
+//
+//	for (DataIdx = 0; DataIdx < len; DataIdx++)
+//	{
+//		__io_putchar(*ptr++);
+//	}
+//	return len;
+//}
+
+3) PWM의 주파수와 주기 출력하기
+//printf 에서 float 출력하기 (예)	printf("freq(HZ)=%.02fHz\n", frequency);
+//링커 옵션으로 "-u_printf_float" 을 linker flags 에 수동으로 추가하기
+//void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+//{
+//	float frequency = 0;
+//	uint32_t duration = 0;
+//
+//	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
+//	{
+//		if (flag == 0) // first input capture
+//		{
+//			v1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+//			flag = 1;
+//		}
+//		else // second input capture
+//		{
+//			v2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+//			__HAL_TIM_SET_COUNTER(htim, 0);
+//
+//			if (v2 > v1)
+//			{
+//				duration = v2 - v1;
+//			}
+//			else if (v1 > v2)
+//			{
+//				duration = (__HAL_TIM_GET_AUTORELOAD(&htim3) - v1) + v2;
+//			}
+//
+//			float timerClock = TIMER_INPUT_FREQ/(__HAL_TIM_GET_PRESCALER(&htim3)+1);
+//
+//			frequency = timerClock/duration;
+//
+//			// https://community.st.com/s/question/0D50X0000B0AEJb/uprintffloat-where-to-set-for-clinker-in-stm32cubeide
+//			printf("freq(HZ)=%.02fHz\n", frequency);
+//			flag = 0; // next cycle
+//		}
+//	}
+//}
