@@ -1,0 +1,91 @@
+** 수업내용 (2026-06-27) **
+
+[1] '프로세서 구조 및 디바이스 프로그래밍' 책
+- I2C = IIC
+  * 직렬 버스 구현을 위해 SDA(Data)와 SCL(Clock)이라는 두 개의 핀만 사용
+  * 여러 장치가 동시에 버스를 제어하려고 시도하려는 경우 데이터 손상을 방지하기 위해 중재 및 충돌 감지를 사용
+  * 매우 많이 쓰는 버스
+  * 풀업 저항을 안달면 동작 안하기 때문에 필수적으로 필요함 -> 라인이 플로팅되어 불확살한 값이 발생해 오류가 발생
+  * 데이터는 하나 이상의 바이트를 포함하는 패킷으로 전송하고, 각 바이트 내에서 최상위 비트(MSB)가 먼저 전송됨
+  * Start 조건 : SCL이 HIGH인데 SDA가 떨어지는 구간  /  Stop 조건 : SCL이 HIGH인데 SDA가 올라가는 구간
+  * Master는 Slave로부터 ACK를 받음. ACK를 받으면 Master가 Stop 조건을 만들어냄
+  ** 1) START 신호 : 데이터 전송의 시작을 나타내고 모든 슬레이브를 깨움
+  ** 2) 슬레이브 주소 전송 : 각 슬레이브에는 고유한 주소가 있으며 동시에 마스터와 슬레이브가 될 수 없음
+  ** 3) 데이터 전송
+  ** 4) STOP 신호
+  * Master는 START 신호 다음에 장치 주소를 보냄. ACK(응답) 신호 받으면 데이터를 읽거나 씀(LSB-R/W). 그리고 마지막에 STOP 신호를 보내 종료
+  * Write(Read X) 일때만 Data Byte 끝에 ACK를 보냄
+- USART : 비동기(선1개), PC/보드<->보드 통신  /  I2C : 동기(선2개), 온보드 통신(칩간 통신)  /  SPI : 동기(선 5개)
+- USB의 장점은 확장성이 매우 좋다는 것이고, I2C 또한 임베디드에서 성공한 이유는 선이 2개 밖에 없어 배선이 쉽다는 장점이 있음
+- WDG(감시 타이머) : 런어웨이 코드에서 SW를 복구하는 데 사용되는 16/32비트 타이머 -> SW의 폭주를 감지하는 타이머(원치 않는데서 무한루프 etc.)
+  * 사례 : 보이스 레코딩중 무한 루프 감지, 무선공유기(라우터) 장애 감지, 낸드플래시 기록중 무한대기
+  * 타임아웃 전에 레지스터에 쓰기가 이뤄지지 않으면 워치독 타이머는 리셋 컨트롤러 모듈에 신호를 보냄 (like 시한폭탄)
+  * 리셋을 방지하기 위해 SW는 워치 도그 타이머를 주기적으로 카운트다운 다시 시작해야함
+  * 루프 회전 주기를 계산해서 짜줘야함
+  * IWDG(Independent Watchdog)  /  WWDG(Window Watchdog)
+
+[2] 실습 : ADC & DMA, I2C, WDG
+- 예제 : 11_ADC_01_VARISTER_f429, 11_ADC_04_TEMPERATURE_SENSOR_DMA_f429, 11_ADC_06_CDS_SENSOR_f429, 13_I2C_03_LCD1602_f429, 09_WDG_01_IWDG_f429
+- F3 : 함수 정의로 들어감
+- F5 : Step Into (Debug mode)
+- F6 : Step Over (Debug mode)
+- Ctrl+/ : 주석처리
+
+1) 시스템 클럭을 1000000U로 나누는 이유(시스템 클럭 84MHz) -> 1us 단위로 맞춰주기 위함
+//  /* Enable the ADC peripheral */
+//  /* Check if ADC peripheral is disabled in order to enable it and wait during 
+//  Tstab time the ADC's stabilization */
+//  if((hadc->Instance->CR2 & ADC_CR2_ADON) != ADC_CR2_ADON)
+//  {  
+//    /* Enable the Peripheral */
+//    __HAL_ADC_ENABLE(hadc);
+//    
+//    /* Delay for ADC stabilization time */
+//    /* Compute number of CPU cycles to wait for */
+//    counter = (ADC_STAB_DELAY_US * (SystemCoreClock / 1000000U)); // 252clock -> 3us
+//    while(counter != 0U)
+//    {
+//      counter--;
+//    }
+//  }
+
+2) ADE 변환 시작하라는 명령어
+//        /* if no external trigger present enable software conversion of regular channels */
+//        if((hadc->Instance->CR2 & ADC_CR2_EXTEN) == RESET) 
+//        {
+//          /* Enable the selected ADC software conversion for regular group */
+//          hadc->Instance->CR2 |= (uint32_t)ADC_CR2_SWSTART;
+//        }
+
+3) 특정 비트를 0으로 지우는 코드
+//  /* Clear regular group conversion flag */
+//  __HAL_ADC_CLEAR_FLAG(hadc, ADC_FLAG_STRT | ADC_FLAG_EOC);
+
+4) LCD 글자 날려주는 함수
+// HAL_I2C_Master_Transmit(&hi2c1, DEVICE_ADDR, (uint8_t*)&data, 1, 10);
+
+5) WDG 초기값 설정
+//static void MX_IWDG_Init(void)
+//{
+//
+//  /* USER CODE BEGIN IWDG_Init 0 */
+//
+//  /* USER CODE END IWDG_Init 0 */
+//
+//  /* USER CODE BEGIN IWDG_Init 1 */
+//
+//  /* USER CODE END IWDG_Init 1 */
+//  LL_IWDG_Enable(IWDG);
+//  LL_IWDG_EnableWriteAccess(IWDG);
+//  LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_4); // sysclk(LSI)=32KH
+//  LL_IWDG_SetReloadCounter(IWDG, 4095); // 0xFFF (RLR 최대값)
+//  while (LL_IWDG_IsReady(IWDG) != 1)
+//  {
+//  }
+//
+//  LL_IWDG_ReloadCounter(IWDG);
+//  /* USER CODE BEGIN IWDG_Init 2 */
+//
+//  /* USER CODE END IWDG_Init 2 */
+//
+//}
