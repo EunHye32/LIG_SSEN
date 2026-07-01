@@ -1,0 +1,16 @@
+main.c:101:5:main	2
+main.c:220:6:SystemClock_Config	3
+main.c:266:13:MX_CRC_Init	2
+main.c:292:13:MX_DMA2D_Init	3
+main.c:329:13:MX_I2C3_Init	4
+main.c:377:13:MX_LTDC_Init	3
+main.c:439:13:MX_SPI5_Init	2
+main.c:477:13:MX_TIM1_Init	4
+main.c:523:13:MX_USART1_UART_Init	2
+main.c:552:13:MX_FMC_Init	2
+main.c:603:13:MX_GPIO_Init	1
+main.c:710:6:StartDefaultTask	1
+main.c:731:6:UartTask	2
+main.c:759:6:SensorTask	1
+main.c:794:6:HAL_TIM_PeriodElapsedCallback	2
+main.c:811:6:Error_Handler	1
