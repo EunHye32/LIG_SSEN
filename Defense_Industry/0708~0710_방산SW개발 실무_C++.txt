@@ -1,0 +1,54 @@
+** 방산SW개발 실무 - C++ (2026-07-08~10) **
+
+[책 추천]
+- 조영호 "오브젝트"
+  * https://product.kyobobook.co.kr/detail/S000001766367?utm_source=google&utm_medium=cpc&utm_campaign=googleSearch&gad_source=1
+- 배현직 "게임 서버 프로그래밍 교과서"
+  * https://product.kyobobook.co.kr/detail/S000001792817
+
+[과정 목표]
+- 소프트웨어 개발 프로세스를 이해함
+- 객체지향의 기본 개념과 설계 원칙을 이해
+- UML 및 디자인 패턴을 이해하고, 주요 패턴을 설계에 활용할 수 있음
+
+- 분산시스템의 카프카나 MQTT 써보기
+- 아키텍처하면 무조건 품질 속성을 떠올리기.
+  * 품질 속성 : 가용성, 성능, 변경 용이성
+- TCP vs UDP
+  * TCP(Transmission Control Protocol) : 라우터가 지정되어 연결돼 흐름지향성. "Send, Receive"
+  * UDP(User Datagram Protocol) : 경로 지정을 하지 않아 비흐름지향성. 순서도 없음. "Send to, Receive from"
+  * 라우터 문제가 없으면 TCP나 UDP나 똑같은데, 라우터가 혼잡하여 데이터 손실나는 경우엔 TCP 사용해야함
+  * 다재간 통신일 경우 UDP가 적합한 이유는 UDP는 멀티캐스팅과 브로드캐스팅이 가능한데 TCP는 안되기 때문
+  * http가 7계층인데, 4층에 TCP가 있기때문에 UDP 통신이 안되면 방화벽에서 막히기 때문
+
+- MyName -> class  /  myName -> 변수  /  my_Name -> X
+- 포대 : 레이다-발사대-통제소가 같이 다님
+
+- u(user) ---> I(interface) <- - C(변경될 수 있음. ex. TCP, UDP) -> ㄱ자 기억하기
+  * u가 제일 중요함 -> 수정할 거 같으면 Factory화
+  * 일반화와 추상화는 다른데, 일반화는 C들이 모여서 I로 가는거고 추상화는 U에서 I로 가는거 -> 일반화는 없어져야함
+
+[SW 개발의 이해]
+- 설계에서 가장 중요한 것은 무엇인가? : Design for Change(변화를 수용할 수 있는 설계)
+- 객체의 3요소 : 캡슐화(Encapsulation), 상속(Inheritance), 다형성(Polymorphism)
+- 객체지향의 최대 단점은 상태를 공유해 수정하게 되면, 다른 것에 영향을 끼칠 수도 있음
+- 조건문은 다형성으로 바꾸면 됨 -> 조건문은 다형성으로 바꿈(클래스 등으로 추출)
+- DDD(Domain Driven Design) : CRUD 기능을 만드는 것에 그치지 않고, 비즈니스 전문가와 개발자가 동일한 언어로 소통하며 시스템을 구축하는 데 목적
+- 유즈케이스는 동사로 작성해야함. 요구사항은 더 비지니스적임
+- 클린 아키텍처
+- SQL 언어나 함수형 언어는 선언형 언어임
+- C#은 객체지향형 언어이지만 선언형처럼 쓰는 방법이 있는데 그건 LinQ 임
+- CRUD : 소프트웨어 시스템이 데이터를 처리하는 4가지 기본 기능을 일컫는 약어
+  * Create -> INSERT (SQL 대응)
+  * Read -> SELECT
+  * Update -> UPDATE
+  * Delete -> DELETE
+  ** DAO(Data Access Object) : 데이터베이스에 실제로 접근하여 CRUD를 수행하는 일꾼 객체
+  ** DTO (Data Transfer Object) : 데이터를 담아 전달하는 순수한 그릇 객체로 로직이 없음
+- HTTP는 전송 프로토콜
+- 미들웨어는 상대 객체를 부르는 것
+- 데이터 통신 서비스 + 데이터 직렬화/역직렬화
+  * 직렬화 : htoms()  /  역직렬화 : ntohs()
+- 통신을 하면 클래스를 보내는게 아니라 그 안에 있는 값들을 보내는 거임
+- 개발을 할 때 인덱싱먼저하고 사이즈 먼저 정해줘야함
+- 팩토리 메소드 패턴
