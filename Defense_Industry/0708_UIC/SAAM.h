@@ -1,7 +1,7 @@
 #pragma once
 #include "WeaponInterface.h"
-class LSAM :
-    public WeaponInterface
+class SAAM :
+  public WeaponInterface
 {
 public:
   void engage() override;

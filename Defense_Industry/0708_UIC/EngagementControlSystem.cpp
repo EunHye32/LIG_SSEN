@@ -3,42 +3,16 @@
 #include "LSAM.h"
 #include <iostream>
 
-WeaponInterface*
-EngagementControlSystem::createWeapon(unsigned short weaponID)
+void
+EngagementControlSystem::setWeapon(WeaponInterface* tmpWeapon)
 {
-  WeaponInterface* weapon = nullptr;
-  if (weaponID == 1)
-  {
-    weapon = new MSAM;
-  }
-  else if (weaponID == 2)
-  {
-    weapon = new LSAM;
-  }
-  else if (weaponID == 3)
-  {
-    //weapon = new SAAM;
-  }
-  else
-  {
-    std::cout << "WeaponID is not defined" << std::endl;
-  }
-
-  return weapon;
+  // dependency injection
+  this->weapon = tmpWeapon;
 }
 
 void
-EngagementControlSystem::deleteWeapon(WeaponInterface* weapon)
-{
-  delete weapon;
-}
-
-void
-EngagementControlSystem::startEngagement(WeaponInterface* weapon)
+EngagementControlSystem::startEngagement()
 {
   std::cout << "Start Engagement" << std::endl;
-
-  weapon->engage();
-
-  
+  this->weapon->engage();
 }

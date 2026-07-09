@@ -4,10 +4,8 @@
 class EngagementControlSystem
 {
 public:
-  WeaponInterface* createWeapon(unsigned short);
-  void deleteWeapon(WeaponInterface*);
-
-  void startEngagement(WeaponInterface*);
+  void setWeapon(WeaponInterface*);
+  void startEngagement();
 
 private:
   WeaponInterface* weapon;
