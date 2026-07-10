@@ -114,3 +114,21 @@
 - 상속은 재사용이 아닌 계층구조의 표현에 초점
 - 다형성은 한 행동을 여러 방법으로 구현하고 상황에 따라 적당한 구현을 선택할 수 있도록 기능을 제공
 - 객체지향의 상속은 계층이 아니라 분류
+- 객체지향 프로그래밍의 가장 마지막 단계는 의사소통을 위한 디자인 패턴 설계
+
+[디자인 패턴 기본]
+- 탄이 날라오는 걸 맞추는걸 교전이라고 하고, 그 정보를 통제하는게 교전 통제소
+- 다대다 디자인 패턴 - 옵저버 패턴
+  * u(Main data) : +attch() +detach() +notify() -> for(ele : collector) ele->update()
+  * I(동맹) : update()
+  * c : A B ...
+  * 다대다 아키텍처 패턴 : 팝섭(Publish-subscribe)
+- 디자인 패턴을 만들어 놓으면 다수가 얘기하기 좋음
+- 패턴을 고르는 것은 경험에 의해 결정
+- 생성 패턴 : Abstract Factory, Builder, Factory Method, Prototype, Singleton
+- 구조 패턴
+  : Adapter(서로 API가 다름, MCP 구현할 때 사용), Bridge, Composite(통신 시 직렬화/역직렬화 구현할 때 사용), Decorator(ex.로깅), Facade, Flyweight, Proxy
+- 행동 패턴 : Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor
+
+- 통제기술연구소
+- "내가 하는게 여기에 맞을 거 같습니다."
