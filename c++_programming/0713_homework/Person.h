@@ -16,10 +16,10 @@ public:
 	int getNum();
 };
 
-class PersonArr {
+class PersonArr {		//dao. 배열에 추가, 검색, 수정, 삭제
 private:
 	Person* arr[10];  //Person 주소 갖음. 소멸자에서 Person*를 해제
-	int cnt;
+	int cnt;	//요소 개수`
 public:
 	PersonArr() :cnt(0), arr({ NULL, }) {}
 	~PersonArr();
@@ -32,7 +32,7 @@ public:
 
 class PersonService {
 private:
-	PersonArr arr;
+	PersonArr arr;	//포함관계. has a 관계
 public:
 	void add();
 	void get();

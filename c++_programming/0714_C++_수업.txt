@@ -1,0 +1,74 @@
+** Notion Link : https://app.notion.com/p/c-182751ba40e38026a21cecd72d4f7d73?source=copy_link **
+
+- 멤버변수 : 객체가 갖는 값(정보, 상태값)
+- 멤버함수 : 기능
+
+- vo(value object): 캡슐화, entity
+- dto : 데이터 운반 객체  /  dao : 객체 멤버. db 작업, 배열 -> 파일(insert, select, update, delete)
+  /  service : 비즈니스 로직 제공. 외부에 제공할 기능 구현
+
+- friend : 캡슐화의 예외를 허용하는 특별한 관계를 맺는 문법
+  * 연산자 오버로딩 시 사용
+  * friend로 등록된 클래서에 private 멤버를 오픈 -> 객체 지향 은닉성에 위배되므로 권장 X
+  * 클래스 내부에서 선언하여 독립성 유지. 단방향성, 비대칭성(상속 X)
+  // int g_num = 0; //전역변수
+  // void f1(Test& t){  //전역함수
+  //   cout << t.x <<endl;  
+  // }  
+  // 
+  // class Test{
+  //   private:
+  //     int x;
+  //   friend void f1(Test& t);  //전역함수를 friend로 지정. 이 함수는 Test의 private멤버에 접근 허용
+  // }
+
+  //class Test{
+  //  friend 클래스명;  //클래스의 멤버 함수에서는 Test의 private 멤버를 직접 접근해서 읽고 쓰기가 됨
+  //  friend 클래스명::함수명(); // 클래스에서 작성한 함수에서만  Test의 private 멤버를 직접 접근해서 읽고 쓰기가 됨
+  //
+  //}
+
+- bss : 초기화 안한 전역변수, static 변수. 자동 초기화
+- data : 초기화 한 전역변수, static 변수
+- heap : 변수선언으로 할당 못받음. malloc(), new ... -> 광활. 사이즈 큰 것들 저장
+- stack : 함수 사용 메모리
+
+- static 멤버는 클래스 인스턴스(객체)가 몇 개 생성되든 메모리에 딱 하나만 존재하며, 모든 객체가 이를 공유. 마치 공용 데이터
+  * 공유성, 초기화(전역 영역에서 반드시 한 번 초기화), 객체가 아닌 클래스 소속
+
+- 현재는 싱글톤 많이 사용하지 않고, 꼭 필요한 경우에만 사용하는 것을 권함
+  * 자원관리를 위해 하나만 생성
+  * 생성자는 private. 내부에서 만든 객체는 static으로 만들어 외부에 전달 -> 객체를 외부에 전달해야 함수
+
+- 다형성 : 똑같은 지시를 내려도, 객체의 종류에 따라 서로 다르게 동작하는 현상
+  * 함수 오버라이딩(Overriding) : 부모의 유산 덮어쓰기. 부모 클래스에 있는 함수와 이름, 매개변수, 반환형이 완전히 똑같은 함수를 자식 클래스에서 다시 정의
+  * 오버로딩(Overloading) : 이름은 같지만 매개변수가 달라 여러 개를 겹쳐 쌓는(Load) 느낌
+  * 오버라이딩(Overriding) : 기존의 것을 새로운 것으로 완전히 덮어 타는(Ride) 느낌
+  // class Animal {
+  // public:
+  //     void speak() {
+  //         std::cout << "동물이 소리를 냅니다." << std::endl;
+  //     }
+  // };
+  // 
+  // class Dog : public Animal {
+  // public:
+  //     // 부모의 speak() 함수를 덮어씀 (오버라이딩)
+  //     void speak() {
+  //         std::cout << "멍멍!" << std::endl;
+  //     }
+  // };
+  // 
+  // class Cat : public Animal {
+  // public:
+  //     // 부모의 speak() 함수를 덮어씀 (오버라이딩)
+  //     void speak() {
+  //         std::cout << "야옹~" << std::endl;
+  //     }
+  // };
+
+- 업캐스팅(Upcasting) : 부모 클래스의 포인터로 자식 객체를 가리키는 것 -> 포인터로만 가능
+  * 업캐스팅 되면 타입이 부모이기 때문에 부모 클래스에 정의된 멤버만 사용 가능
+- 다운캐스팅 : 업캐스팅된 객체를 원래 타입으로 내림
+  * ((Dog*)p)->bite();
+- typeid(int).name();  //타입을 확인하기 위해 사용하는 함수. <typeinfo> 헤더 필요
