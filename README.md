@@ -7,6 +7,9 @@
 # C++ programming
 - 2026-07-13 ~ 2026-07-16
 
+# C# programming
+- 2026-07-20 ~
+
 # Embedded practice (STM32CubeIDE)
 ## board : STM32F429I-DISC1
 - Introduction : 2026-06-17 ~ 2026-06-18
