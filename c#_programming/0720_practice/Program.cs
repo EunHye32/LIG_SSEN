@@ -1,4 +1,11 @@
 ﻿using ConsoleApp1;
+using ConsoleApp5;
+
+/* 포켓몬
+Menu menu = new Menu();
+menu.selCh();
+menu.run();
+*/
 
 /* 응용
 Service service = new Service();
